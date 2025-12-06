@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  app-review-service:
+    build: .
+    ports:
+      - "8004:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app_review_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=app_review_db
+    ports:
+      - "5436:5432"
+    volumes:
+      - app_review_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  app_review_postgres_data:

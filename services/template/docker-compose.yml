@@ -1,0 +1,58 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/template_service
+      - ADMIN_API_KEY=${ADMIN_API_KEY}
+      - INTERNAL_SERVICE_TOKEN=${INTERNAL_SERVICE_TOKEN}
+      - ENV=${ENV:-dev}
+      - OTEL_ENABLE=true
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+    depends_on:
+      - db
+      - otel-collector
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=template_service
+    ports:
+      - "5454:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Observability Stack
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317" # OTLP gRPC
+      - "4318:4318" # OTLP HTTP
+      - "8888:8888" # Metrics
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9070:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "16686:16686" # UI
+      - "14250:14250"
+
+volumes:
+  postgres_data:

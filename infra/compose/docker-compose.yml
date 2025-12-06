@@ -1,0 +1,153 @@
+x-health-pg: &health_pg
+  test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+
+x-health-redis: &health_redis
+  test: ["CMD", "redis-cli", "ping"]
+  interval: 10s
+  timeout: 3s
+  retries: 5
+
+x-health-rabbit: &health_rabbit
+  test: ["CMD", "rabbitmq-diagnostics", "ping"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+
+services:
+  # Single Postgres container for dev with multiple DBs created via init script.
+  pg:
+    image: postgres:16-alpine
+    container_name: prepeet_pg
+    env_file:
+      - ./env/postgres.env
+    environment:
+      # default DB (required by pg image). We’ll still create service DBs via init script.
+      POSTGRES_DB: app
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init/create-dbs.sql:/docker-entrypoint-initdb.d/10-create-dbs.sql:ro
+    ports:
+      - "5434:5432"
+    healthcheck: *health_pg
+
+  redis:
+    image: redis:7-alpine
+    container_name: prepeet_redis
+    command: ["redis-server", "--save", "''"]
+    ports:
+      - "6379:6379"
+    healthcheck: *health_redis
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: prepeet_rabbitmq
+    env_file:
+      - ./env/rabbitmq.env
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck: *health_rabbit
+
+  # --- Notification API ---
+  notification:
+    build:
+      context: ../../services/notification
+      dockerfile: Dockerfile
+    container_name: prepeet_notification_api
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./env/notification.env
+    ports:
+      - "8002:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # --- Notification Consumer (separate worker) ---
+  notification-consumer:
+    build:
+      context: ../../services/notification
+      dockerfile: Dockerfile
+    container_name: prepeet_notification_consumer
+    command: ["python", "-m", "app.consumers.notification_consumer"]
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    env_file:
+      - ./env/notification-consumer.env
+    restart: unless-stopped
+
+  # --- Template Service ---
+  template:
+    build:
+      context: ../../services/template
+      dockerfile: Dockerfile
+    container_name: prepeet_template
+    depends_on:
+      pg:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      TEMPLATE_DB_URL: postgresql+asyncpg://template_user:template_pass@pg:5432/template
+      TEMPLATE_REDIS_URL: redis://redis:6379/1
+      TEMPLATE_PORT: 8003
+    ports:
+      - "8003:8003"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8003/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # --- Other services (placeholders, enable when ready) ---
+  # auth:
+  #   build: { context: ../../services/auth, dockerfile: Dockerfile }
+  #   env_file: [ ./env/auth.env ]
+  #   depends_on: { pg: { condition: service_healthy } }
+  #   ports: [ "8001:8000" ]
+  #   restart: unless-stopped
+  #
+  # user:
+  #   build: { context: ../../services/user, dockerfile: Dockerfile }
+  #   env_file: [ ./env/user.env ]
+  #   depends_on: { pg: { condition: service_healthy } }
+  #   restart: unless-stopped
+  #
+  # interview:
+  #   build: { context: ../../services/interview, dockerfile: Dockerfile }
+  #   env_file: [ ./env/interview.env ]
+  #   depends_on: { pg: { condition: service_healthy } }
+  #   restart: unless-stopped
+  #
+  # resume:
+  #   build: { context: ../../services/resume, dockerfile: Dockerfile }
+  #   env_file: [ ./env/resume.env ]
+  #   depends_on: { pg: { condition: service_healthy } }
+  #   restart: unless-stopped
+  #
+  # app-review:
+  #   build: { context: ../../services/app-review, dockerfile: Dockerfile }
+  #   env_file: [ ./env/app-review.env ]
+  #   depends_on: { pg: { condition: service_healthy } }
+  #   restart: unless-stopped
+
+volumes:
+  pg_data: {}

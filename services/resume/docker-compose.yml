@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  resume-service:
+    build: .
+    ports:
+      - "8006:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/resume_db
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=resume_db
+    ports:
+      - "5438:5432"
+    volumes:
+      - resume_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  resume_postgres_data:
