@@ -65,13 +65,76 @@ export default function VariablePanel() {
       </div>
 
       <div className="space-y-4">
-        {Object.entries(variables).map(([key, schema]: [string, any]) => (
-          <div key={key} className="relative flex flex-col gap-4 p-4 border rounded-lg bg-card/50 hover:bg-card transition-colors">
+        {Object.entries(variables).map(([key, schema], index) => (
+          <VariableRow 
+             key={key} // We still use key, but we won't change it *while* typing
+             originalKey={key}
+             schema={schema}
+             onUpdate={handleUpdateVariable}
+             onDelete={handleDeleteVariable}
+             testVariables={testVariables}
+             setTestVariable={setTestVariable}
+          />
+        ))}
+        
+        {Object.keys(variables).length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/10">
+            <p className="text-sm text-muted-foreground mb-2">No variables defined</p>
+            <Button variant="ghost" size="sm" onClick={handleAddVariable}>
+              Add your first variable
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VariableRow({ 
+    originalKey, 
+    schema, 
+    onUpdate, 
+    onDelete, 
+    testVariables, 
+    setTestVariable 
+}: {
+    originalKey: string;
+    schema: any;
+    onUpdate: (oldKey: string, newKey: string, type: string) => void;
+    onDelete: (key: string) => void;
+    testVariables: Record<string, any>;
+    setTestVariable: (key: string, value: any) => void;
+}) {
+    const [name, setName] = React.useState(originalKey);
+
+    // Sync local name if outside prop changes (e.g. initial load or external reset)
+    // But ONLY if we are not currently editing it (handled by not syncing if focus matches... tricky)
+    // Or simpler: sync when originalKey changes
+    React.useEffect(() => {
+        setName(originalKey);
+    }, [originalKey]);
+
+    const handleBlur = () => {
+        if (name !== originalKey && name.trim()) {
+            onUpdate(originalKey, name, schema.type);
+        } else if (!name.trim()) {
+            setName(originalKey); // Revert if empty
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            (e.currentTarget as HTMLInputElement).blur();
+        }
+    };
+
+    return (
+          <div className="relative flex flex-col gap-4 p-4 border rounded-lg bg-card/50 hover:bg-card transition-colors">
             <Button
               variant="ghost"
               size="icon"
               className="absolute right-2 top-2 h-6 w-6 text-muted-foreground hover:text-destructive"
-              onClick={() => handleDeleteVariable(key)}
+              onClick={() => onDelete(originalKey)}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -80,8 +143,10 @@ export default function VariablePanel() {
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground">Name</Label>
                 <Input
-                  value={key}
-                  onChange={(e) => handleUpdateVariable(key, e.target.value, schema.type)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={handleBlur}
+                  onKeyDown={handleKeyDown}
                   className="h-8 font-mono text-xs"
                 />
               </div>
@@ -89,7 +154,7 @@ export default function VariablePanel() {
                 <Label className="text-xs font-medium text-muted-foreground">Type</Label>
                 <Select
                   value={schema.type}
-                  onValueChange={(val) => handleUpdateVariable(key, key, val)}
+                  onValueChange={(val) => onUpdate(originalKey, originalKey, val)}
                 >
                   <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
@@ -108,24 +173,12 @@ export default function VariablePanel() {
             <div className="space-y-2">
               <Label className="text-xs font-medium text-muted-foreground">Test Value</Label>
               <Input
-                value={testVariables[key] || ''}
-                onChange={(e) => setTestVariable(key, e.target.value)}
+                value={testVariables[originalKey] || ''}
+                onChange={(e) => setTestVariable(originalKey, e.target.value)}
                 placeholder={`Enter ${schema.type} value...`}
                 className="h-8 text-xs"
               />
             </div>
           </div>
-        ))}
-        
-        {Object.keys(variables).length === 0 && (
-          <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed rounded-lg bg-muted/10">
-            <p className="text-sm text-muted-foreground mb-2">No variables defined</p>
-            <Button variant="ghost" size="sm" onClick={handleAddVariable}>
-              Add your first variable
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
 }

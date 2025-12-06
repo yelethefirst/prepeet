@@ -9,6 +9,7 @@ export interface Template {
   created_by: string;
   updated_by: string;
   current_version_id?: string;
+  channel: 'email' | 'sms' | 'push';
 }
 
 export interface TemplateVersion {
