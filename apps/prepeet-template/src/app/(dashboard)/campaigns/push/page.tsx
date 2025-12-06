@@ -9,11 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
 import { Plus, Search, AlertCircle } from 'lucide-react';
+import { CreateCampaignActions } from '@/components/campaigns/CreateCampaignActions';
 
-export default function TemplatesPage() {
+export default function PushCampaignsPage() {
   const { data: templates = [], isLoading, error, refetch } = useQuery({
-    queryKey: ['templates'],
-    queryFn: () => templateApi.listTemplates(),
+    queryKey: ['templates', 'push'],
+    queryFn: () => templateApi.listPushTemplates(),
   });
 
   if (error) {
@@ -26,7 +27,7 @@ export default function TemplatesPage() {
             </EmptyMedia>
             <EmptyTitle>Something went wrong</EmptyTitle>
             <EmptyDescription>
-              Failed to load templates. Please check your connection and try again.
+              Failed to load Push Notification campaigns. Please check your connection and try again.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
@@ -43,22 +44,17 @@ export default function TemplatesPage() {
     <div className="p-4 md:p-8 max-w-7xl mx-auto w-full space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Templates</h2>
-          <p className="text-muted-foreground">Manage your email templates</p>
+          <h2 className="text-3xl font-bold tracking-tight">Push Campaigns</h2>
+          <p className="text-muted-foreground">Manage your mobile push notifications</p>
         </div>
-        <Link href="/templates/new" className="w-full sm:w-auto">
-          <Button className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Create Template
-          </Button>
-        </Link>
+        <CreateCampaignActions />
       </div>
 
       <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="relative flex-1 w-full sm:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search templates..."
+            placeholder="Search campaigns..."
             className="pl-9 w-full"
           />
         </div>

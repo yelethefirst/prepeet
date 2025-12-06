@@ -12,6 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider
+    className="h-screen max-h-screen overflow-hidden"
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",
@@ -22,7 +23,7 @@ export default function DashboardLayout({
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader />
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex flex-1 flex-col h-full overflow-hidden">
           {children}
         </div>
       </SidebarInset>

@@ -36,6 +36,7 @@ async def list_templates(
     return await service.list_templates(tenant_id, channel, category, skip, limit)
 
 
+
 @router.post("/", response_model=Template)
 async def create_template(
     template_in: TemplateCreate,
@@ -46,6 +47,43 @@ async def create_template(
         return await service.create_template(template_in)
     except DuplicateTemplateError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/email", response_model=List[Template])
+async def list_email_templates(
+    tenant_id: Optional[str] = None,
+    category: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    service = TemplateService(db)
+    return await service.list_templates(tenant_id, ChannelType.EMAIL, category, skip, limit)
+
+
+@router.get("/sms", response_model=List[Template])
+async def list_sms_templates(
+    tenant_id: Optional[str] = None,
+    category: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    service = TemplateService(db)
+    return await service.list_templates(tenant_id, ChannelType.SMS, category, skip, limit)
+
+
+@router.get("/push", response_model=List[Template])
+async def list_push_templates(
+    tenant_id: Optional[str] = None,
+    category: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    service = TemplateService(db)
+    return await service.list_templates(tenant_id, ChannelType.PUSH, category, skip, limit)
+
 
 
 @router.get("/{id}", response_model=TemplateWithVersions)

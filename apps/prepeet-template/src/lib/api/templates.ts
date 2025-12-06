@@ -18,16 +18,28 @@ async function fetchJson<T>(url: string, options?: RequestInit): Promise<T> {
 }
 
 export const templateApi = {
-  listTemplates: async (category?: string): Promise<Template[]> => {
-    const query = category ? `?category=${category}` : '';
-    // Backend returns list of objects with 'key'. Frontend expects 'slug'.
-    // We map backend 'key' to frontend 'slug' if needed, or update Types.
-    // For now assuming backend returns what we need or we tolerate the prop name diff.
-    // Actually, let's just return what backend gives and hope types align or use 'key' in frontend components.
-    // But wait, frontend types say 'slug'.
-    // Let's assume we need to patch it or better yet, update the Backend to Alias 'key' as 'slug' for compat?
-    // No, let's fix the URL first.
+  listTemplates: async (category?: string, channel?: string): Promise<Template[]> => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (channel) params.append('channel', channel);
+    
+    const query = params.toString() ? `?${params.toString()}` : '';
     return fetchJson(`${API_BASE}/api/v1/templates${query}`);
+  },
+
+  listEmailTemplates: async (category?: string): Promise<Template[]> => {
+    const query = category ? `?category=${category}` : '';
+    return fetchJson(`${API_BASE}/api/v1/templates/email${query}`);
+  },
+
+  listSmsTemplates: async (category?: string): Promise<Template[]> => {
+    const query = category ? `?category=${category}` : '';
+    return fetchJson(`${API_BASE}/api/v1/templates/sms${query}`);
+  },
+
+  listPushTemplates: async (category?: string): Promise<Template[]> => {
+    const query = category ? `?category=${category}` : '';
+    return fetchJson(`${API_BASE}/api/v1/templates/push${query}`);
   },
 
   getTemplate: async (id: string): Promise<Template> => {

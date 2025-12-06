@@ -4,10 +4,9 @@ import React from 'react';
 import { Template } from '@/types/template';
 import TemplateCard from './TemplateCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from '@/components/ui/empty';
-import { FilePlus, Plus } from 'lucide-react';
-import Link from 'next/link';
+import { FilePlus } from 'lucide-react';
+
 
 interface TemplateListProps {
   templates: Template[];
@@ -40,14 +39,7 @@ export default function TemplateList({ templates, isLoading }: TemplateListProps
             You haven't created any email templates yet. Start by creating your first template to engage your users.
           </EmptyDescription>
         </EmptyHeader>
-        <EmptyContent>
-          <Link href="/templates/new">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Template
-            </Button>
-          </Link>
-        </EmptyContent>
+
       </Empty>
       </div>
     );

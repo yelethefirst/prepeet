@@ -149,7 +149,7 @@ export default function EditorPage() {
           {/* Top/Left Section: Back, Title, Subject */}
           <div className="flex items-center gap-2 w-full md:w-auto overflow-hidden">
              <Button variant="ghost" size="icon" asChild className="h-8 w-8 shrink-0">
-               <Link href="/templates">
+               <Link href={template?.channel ? `/campaigns/${template.channel}` : '/campaigns'}>
                  <ArrowLeft className="h-4 w-4" />
                </Link>
              </Button>
@@ -161,19 +161,7 @@ export default function EditorPage() {
                 </div>
                 
                 <div className="flex items-center gap-2 flex-1 min-w-0">
-                    {template?.channel !== 'sms' && (
-                      <div className="flex items-center gap-2 w-full max-w-xl">
-                        <span className="text-sm font-medium text-muted-foreground whitespace-nowrap hidden sm:inline-block">
-                          {template?.channel === 'push' ? 'Title:' : 'Subject:'}
-                        </span>
-                        <Input 
-                           value={draft.subject}
-                           onChange={(e) => updateDraft('subject', e.target.value)}
-                           placeholder={template?.channel === 'push' ? "Notification Title..." : "Enter email subject..."}
-                           className="h-8 bg-transparent"
-                        />
-                      </div>
-                    )}
+
                 </div>
              </div>
           </div>

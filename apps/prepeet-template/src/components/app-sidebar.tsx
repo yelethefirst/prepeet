@@ -27,10 +27,24 @@ const data = {
   },
   navMain: [
     {
-      title: "Templates",
-      url: "/templates",
+      title: "Campaigns",
+      url: "#",
       icon: IconFileDescription,
       isActive: true,
+      items: [
+        {
+          title: "Email Templates",
+          url: "/campaigns/email",
+        },
+        {
+          title: "SMS Templates",
+          url: "/campaigns/sms",
+        },
+        {
+          title: "Push Templates",
+          url: "/campaigns/push",
+        },
+      ],
     },
     {
       title: "Settings",
@@ -50,9 +64,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="/templates">
+              <a href="/campaigns">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Template CMS</span>
+                <span className="text-base font-semibold">Prepeet CMS</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>

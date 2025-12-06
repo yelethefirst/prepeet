@@ -83,7 +83,7 @@ export default function TemplateCard({ template }: TemplateCardProps) {
                 Clone
             </Button>
         </div>
-        <Link href={`/templates/${template.id}`} className="flex-1">
+        <Link href={`/campaigns/${template.id}`} className="flex-1">
           <Button size="sm" className="w-full">
             <Edit className="h-3 w-3 mr-2" />
             Edit

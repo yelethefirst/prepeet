@@ -1,7 +1,7 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
+import React, { Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/field';
 import { ArrowLeft, FilePlus } from 'lucide-react';
 import Link from 'next/link';
+import { CreateCodeTemplate } from '@/components/campaigns/CreateCodeTemplate';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -36,8 +37,16 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export default function CreateTemplatePage() {
+function CreateTemplateContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mode = searchParams.get('mode');
+
+  // If in 'code' mode, show the split-view code editor
+  if (mode === 'code') {
+    return <CreateCodeTemplate />;
+  }
+
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,7 +58,11 @@ export default function CreateTemplatePage() {
   const onSubmit = async (data: FormData) => {
     try {
       const newTemplate = await templateApi.createTemplate(data);
-      router.push(`/templates/${newTemplate.id}`);
+      if (mode === 'scratch') {
+          // If explicitly scratch, maybe we go to a specific view? 
+          // Default behavior matches "scratch" intent (empty editor).
+      }
+      router.push(`/campaigns/${newTemplate.id}`);
     } catch (error) {
       console.error('Failed to create template:', error);
       // Ideally show a toast notification here
@@ -65,9 +78,9 @@ export default function CreateTemplatePage() {
             <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
               <FilePlus className="size-6" />
             </div>
-            <h1 className="text-xl font-bold">Create Template</h1>
+            <h1 className="text-xl font-bold">Create Campaign</h1>
             <p className="text-sm text-muted-foreground">
-              Start a new email template from scratch.
+              Start a new campaign template from scratch.
             </p>
           </div>
 
@@ -126,7 +139,7 @@ export default function CreateTemplatePage() {
                 </Button>
                 <Button variant="ghost" type="button" onClick={() => router.back()} className="w-full">
                   <ArrowLeft className="mr-2 h-4 w-4" />
-                  Back to Templates
+                  Back to Campaigns
                 </Button>
               </div>
             </FieldGroup>
@@ -136,3 +149,13 @@ export default function CreateTemplatePage() {
     </div>
   );
 }
+
+export default function CreateTemplatePage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading...</div>}>
+      <CreateTemplateContent />
+    </Suspense>
+  );
+}
+
+

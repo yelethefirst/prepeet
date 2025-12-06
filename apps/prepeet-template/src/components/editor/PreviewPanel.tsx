@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useEditorStore } from '@/lib/stores/editor-store';
 import { templateApi } from '@/lib/api/templates';
 import { renderJinja2 } from '@/lib/utils/jinja2-renderer';
-import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Loader2, Smartphone, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -15,6 +15,7 @@ export default function PreviewPanel() {
   const [renderedText, setRenderedText] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [device, setDevice] = useState<'desktop' | 'mobile'>('desktop');
+
 
   const handleRender = async () => {
     setIsLoading(true);
@@ -62,24 +63,18 @@ export default function PreviewPanel() {
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Preview</h3>
           <div className="flex gap-2">
-            <Button
-              variant={device === 'mobile' ? 'default' : 'outline'}
-              size="icon"
-              onClick={() => setDevice('mobile')}
-              title="Mobile View"
-            >
-              <Smartphone className="h-4 w-4" />
-            </Button>
-            {template?.channel === 'email' && (
-                <Button
-                variant={device === 'desktop' ? 'default' : 'outline'}
-                size="icon"
-                onClick={() => setDevice('desktop')}
-                title="Desktop View"
-                >
-                <Monitor className="h-4 w-4" />
-                </Button>
-            )}
+            <Tabs value={device} onValueChange={(v) => setDevice(v as 'mobile' | 'desktop')}>
+                <TabsList>
+                    <TabsTrigger value="mobile">
+                        <Smartphone className="h-4 w-4" />
+                    </TabsTrigger>
+                    {template?.channel === 'email' && (
+                        <TabsTrigger value="desktop">
+                            <Monitor className="h-4 w-4" />
+                        </TabsTrigger>
+                    )}
+                </TabsList>
+            </Tabs>
           </div>
         </div>
       </div>
@@ -90,19 +85,7 @@ export default function PreviewPanel() {
       )}>
         
         {/* Email Header Preview */}
-        {template?.channel === 'email' && (
-            <div 
-            className={cn(
-                "w-full mb-4 bg-white border rounded px-4 py-2 shadow-sm",
-                device === 'mobile' ? "max-w-[375px]" : "max-w-4xl mt-4"
-            )}
-            >
-                <div className="text-xs text-muted-foreground uppercase tracking-wider mb-1 font-semibold">Subject</div>
-                <div className="text-sm font-medium text-foreground truncate">
-                    {isLoading ? <span className="animate-pulse bg-muted rounded w-1/3 h-4 block"></span> : (renderedSubject || <span className="text-muted-foreground italic">No subject</span>)}
-                </div>
-            </div>
-        )}
+
 
         <div 
           className={cn(
@@ -122,11 +105,6 @@ export default function PreviewPanel() {
           {/* Status Bar simulation for Mobile */}
           {device === 'mobile' && (
               <div className="h-6 w-full bg-black/90 flex justify-between px-6 items-center absolute top-0 left-0 z-20 text-[10px] text-white font-medium">
-                  <span>9:41</span>
-                  <div className="flex gap-1">
-                      <span>5G</span>
-                      <span>100%</span>
-                  </div>
               </div>
           )}
 
@@ -135,14 +113,13 @@ export default function PreviewPanel() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className={cn("h-full w-full overflow-auto pt-8", template?.channel !== 'email' && "bg-zinc-100")}>
+            <div className={cn("h-full w-full overflow-auto", template?.channel !== 'email' && "bg-zinc-100")}>
                 
                 {template?.channel === 'email' && (
                     <iframe
                         srcDoc={renderedHtml}
                         className="w-full h-full border-none bg-white"
                         title="Preview" 
-                        style={{ height: 'calc(100% - 24px)' }} // subtract status bar
                     />
                 )}
 
