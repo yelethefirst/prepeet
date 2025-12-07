@@ -59,9 +59,9 @@ export default function PreviewPanel() {
 
   return (
     <div className="flex flex-col h-full border-l bg-background">
-      <div className="p-4 border-b bg-muted/30">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Preview</h3>
+      <div className="h-14 px-4 border-b bg-muted flex items-center justify-between">
+        <div className="flex items-center justify-between w-full">
+          <span className="text-base font-medium">Preview</span>
           <div className="flex gap-2">
             <Tabs value={device} onValueChange={(v) => setDevice(v as 'mobile' | 'desktop')}>
                 <TabsList>
@@ -80,8 +80,8 @@ export default function PreviewPanel() {
       </div>
 
       <div className={cn(
-        "flex-1 overflow-auto flex flex-col items-center",
-        device === 'mobile' ? "bg-muted/10 p-8 pt-4 items-center justify-start" : "bg-white"
+        "flex-1 overflow-auto flex flex-col items-center bg-accent",
+        device === 'mobile' ? "items-center justify-start" : ""
       )}>
         
         {/* Email Header Preview */}
@@ -92,22 +92,13 @@ export default function PreviewPanel() {
             "bg-white transition-all duration-300 origin-top relative overflow-hidden",
             device === 'mobile' && "shadow-xl border-border/50",
             // Device styles
-             device === 'mobile' ? "bg-zinc-100" : "bg-white"
+            device === 'mobile' ? "bg-zinc-100" : "bg-white"
           )}
           style={{ 
             width: device === 'mobile' ? '375px' : '100%',
-            height: device === 'mobile' ? '667px' : '100%',
-            minHeight: device === 'mobile' ? '667px' : 'calc(100% - 80px)',
-            borderRadius: device === 'mobile' ? '32px' : '0',
-            border: device === 'mobile' ? '8px solid #222' : 'none' 
+            height: '100%',
           }}
         >
-          {/* Status Bar simulation for Mobile */}
-          {device === 'mobile' && (
-              <div className="h-6 w-full bg-black/90 flex justify-between px-6 items-center absolute top-0 left-0 z-20 text-[10px] text-white font-medium">
-              </div>
-          )}
-
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

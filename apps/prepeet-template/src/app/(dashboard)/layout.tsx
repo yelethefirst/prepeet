@@ -12,7 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider
-    className="h-screen max-h-screen overflow-hidden"
+    className="h-screen max-h-screen overflow-hidden scroll-none"
       style={
         {
           "--sidebar-width": "calc(var(--spacing) * 72)",

@@ -7,743 +7,108 @@ import { templateApi } from '@/lib/api/templates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { ArrowLeft, Save, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, ArrowRight, Settings2, LayoutTemplate, Send } from 'lucide-react';
+import { Link } from 'lucide-react'; // Wait, standard Next Link better? No, icon.
 import CodeEditor from '@/components/editor/CodeEditor';
 import PreviewPanel from '@/components/editor/PreviewPanel';
+import VariablePanel from '@/components/editor/VariablePanel';
 import { Template } from '@/types/template';
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable"
-const DEFAULT_HTML = `<!doctype html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+import { DEFAULT_EMAIL_HTML } from '@/lib/constants/templates';
 
-<head>
-    <!-- This is a simple example template that you can edit to create your own custom templates -->
+interface CreateCodeTemplateProps {
+    templateId?: string;
+}
 
-    <!--[if gte mso 15]>
-    <xml>
-    <o:OfficeDocumentSettings>
-    <o:AllowPNG/>
-    <o:PixelsPerInch>96</o:PixelsPerInch>
-    </o:OfficeDocumentSettings>
-    </xml>
-    <![endif]-->
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>*|MC:SUBJECT|*</title>
-    
-<style type="text/css">
-		p{
-			margin:1em 0;
-			padding:0;
-		}
-		table{
-			border-collapse:collapse;
-		}
-		h1,h2,h3,h4,h5,h6{
-			display:block;
-			margin:0;
-			padding:0;
-		}
-		img,a img{
-			border:0;
-			height:auto;
-			outline:none;
-			text-decoration:none;
-		}
-		body,#bodyTable,#bodyCell{
-			height:100%;
-			margin:0;
-			padding:0;
-			width:100%;
-		}
-		#outlook a{
-			padding:0;
-		}
-		img{
-			-ms-interpolation-mode:bicubic;
-		}
-		table{
-			mso-table-lspace:0pt;
-			mso-table-rspace:0pt;
-		}
-		.ReadMsgBody{
-			width:100%;
-		}
-		.ExternalClass{
-			width:100%;
-		}
-		p,a,li,td,blockquote{
-			mso-line-height-rule:exactly;
-		}
-		a[href^=tel],a[href^=sms]{
-			color:inherit;
-			cursor:default;
-			text-decoration:none;
-		}
-		p,a,li,td,body,table,blockquote{
-			-ms-text-size-adjust:100%;
-			-webkit-text-size-adjust:100%;
-		}
-		.ExternalClass,.ExternalClass p,.ExternalClass td,.ExternalClass div,.ExternalClass span,.ExternalClass font{
-			line-height:100%;
-		}
-		a[x-apple-data-detectors]{
-			color:inherit !important;
-			text-decoration:none !important;
-			font-size:inherit !important;
-			font-family:inherit !important;
-			font-weight:inherit !important;
-			line-height:inherit !important;
-		}
-		#bodyCell{
-			padding:9px;
-		}
-		.templateImage{
-			height:auto;
-			max-width:564px;
-		}
-		.templateContainer{
-			max-width:600px !important;
-		}
-		#templatePreheader{
-			padding-right:9px;
-			padding-left:9px;
-		}
-		#templatePreheader .columnContainer td{
-			padding:0 9px;
-		}
-		#footerContent{
-			padding-top:27px;
-			padding-bottom:18px;
-		}
-		#templateHeader,#templateBody,#templateFooter{
-			padding-right:18px;
-			padding-left:18px;
-		}
-	/*
-	@tab Page
-	@section Background Style
-	*/
-		body,#bodyTable{
-			/*@editable*/background-color:#FAFAFA;
-		}
-	/*
-	@tab Page
-	@section Email Border
-	*/
-		.templateContainer{
-			/*@editable*/border:0;
-		}
-	/*
-	@tab Page
-	@section Heading 1
-	*/
-		h1{
-			/*@editable*/color:#222222;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:40px;
-			/*@editable*/font-style:normal;
-			/*@editable*/font-weight:bold;
-			/*@editable*/line-height:150%;
-			/*@editable*/letter-spacing:normal;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Page
-	@section Heading 2
-	*/
-		h2{
-			/*@editable*/color:#222222;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:28px;
-			/*@editable*/font-style:normal;
-			/*@editable*/font-weight:bold;
-			/*@editable*/line-height:150%;
-			/*@editable*/letter-spacing:normal;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Page
-	@section Heading 3
-	*/
-		h3{
-			/*@editable*/color:#444444;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:22px;
-			/*@editable*/font-style:normal;
-			/*@editable*/font-weight:bold;
-			/*@editable*/line-height:150%;
-			/*@editable*/letter-spacing:normal;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Page
-	@section Heading 4
-	*/
-		h4{
-			/*@editable*/color:#999999;
-			/*@editable*/font-family:Georgia;
-			/*@editable*/font-size:20px;
-			/*@editable*/font-style:italic;
-			/*@editable*/font-weight:normal;
-			/*@editable*/line-height:150%;
-			/*@editable*/letter-spacing:normal;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Preheader
-	@section Preheader Style
-	*/
-		#templatePreheader{
-			/*@editable*/background-color:#FAFAFA;
-			/*@editable*/background-image:none;
-			/*@editable*/background-repeat:no-repeat;
-			/*@editable*/background-position:center;
-			/*@editable*/background-size:cover;
-			/*@editable*/border-top:0;
-			/*@editable*/border-bottom:0;
-			/*@editable*/padding-top:9px;
-			/*@editable*/padding-bottom:9px;
-		}
-	/*
-	@tab Preheader
-	@section Preheader Text
-	*/
-		#templatePreheader,#templatePreheader p{
-			/*@editable*/color:#656565;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:12px;
-			/*@editable*/line-height:150%;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Preheader
-	@section Preheader Link
-	*/
-		#templatePreheader a,#templatePreheader p a{
-			/*@editable*/color:#656565;
-			/*@editable*/font-weight:normal;
-			/*@editable*/text-decoration:underline;
-		}
-	/*
-	@tab Header
-	@section Header Style
-	*/
-		#templateHeader{
-			/*@editable*/background-color:#FFFFFF;
-			/*@editable*/background-image:none;
-			/*@editable*/background-repeat:no-repeat;
-			/*@editable*/background-position:center;
-			/*@editable*/background-size:cover;
-			/*@editable*/border-top:0;
-			/*@editable*/border-bottom:0;
-			/*@editable*/padding-top:18px;
-			/*@editable*/padding-bottom:0;
-		}
-	/*
-	@tab Header
-	@section Header Text
-	*/
-		#templateHeader,#templateHeader p{
-			/*@editable*/color:#606060;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:16px;
-			/*@editable*/line-height:150%;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Header
-	@section Header Link
-	*/
-		#templateHeader a,#templateHeader p a{
-			/*@editable*/color:#237A91;
-			/*@editable*/font-weight:normal;
-			/*@editable*/text-decoration:underline;
-		}
-	/*
-	@tab Body
-	@section Body Style
-	*/
-		#templateBody{
-			/*@editable*/background-color:#FFFFFF;
-			/*@editable*/background-image:none;
-			/*@editable*/background-repeat:no-repeat;
-			/*@editable*/background-position:center;
-			/*@editable*/background-size:cover;
-			/*@editable*/border-top:0;
-			/*@editable*/border-bottom:2px solid #EAEAEA;
-			/*@editable*/padding-top:0;
-			/*@editable*/padding-bottom:9px;
-		}
-	/*
-	@tab Body
-	@section Body Text
-	*/
-		#templateBody,#templateBody p{
-			/*@editable*/color:#606060;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:16px;
-			/*@editable*/line-height:150%;
-			/*@editable*/text-align:left;
-		}
-	/*
-	@tab Body
-	@section Body Link
-	*/
-		#templateBody a,#templateBody p a{
-			/*@editable*/color:#237A91;
-			/*@editable*/font-weight:normal;
-			/*@editable*/text-decoration:underline;
-		}
-	/*
-	@tab Footer
-	@section Footer Style
-	*/
-		#templateFooter{
-			/*@editable*/background-color:#FAFAFA;
-			/*@editable*/background-image:none;
-			/*@editable*/background-repeat:no-repeat;
-			/*@editable*/background-position:center;
-			/*@editable*/background-size:cover;
-			/*@editable*/border-top:0;
-			/*@editable*/border-bottom:0;
-			/*@editable*/padding-top:36px;
-			/*@editable*/padding-bottom:9px;
-		}
-	/*
-	@tab Footer
-	@section Social Bar Style
-	*/
-		#socialBar{
-			/*@editable*/background-color:#333333;
-			/*@editable*/border:0;
-			/*@editable*/padding:18px;
-		}
-	/*
-	@tab Footer
-	@section Social Bar Text
-	*/
-		#socialBar,#socialBar p{
-			/*@editable*/color:#FFFFFF;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:12px;
-			/*@editable*/line-height:150%;
-			/*@editable*/text-align:center;
-		}
-	/*
-	@tab Footer
-	@section Social Bar Link
-	*/
-		#socialBar a,#socialBar p a{
-			/*@editable*/color:#FFFFFF;
-			/*@editable*/font-weight:normal;
-			/*@editable*/text-decoration:underline;
-		}
-	/*
-	@tab Footer
-	@section Footer Text
-	*/
-		#footerContent,#footerContent p{
-			/*@editable*/color:#656565;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:12px;
-			/*@editable*/line-height:150%;
-			/*@editable*/text-align:center;
-		}
-	/*
-	@tab Footer
-	@section Footer Link
-	*/
-		#footerContent a,#footerContent p a{
-			/*@editable*/color:#656565;
-			/*@editable*/font-weight:normal;
-			/*@editable*/text-decoration:underline;
-		}
-	/*
-	@tab Footer
-	@section Utility Bar Style
-	*/
-		#utilityBar{
-			/*@editable*/background-color:#FAFAFA;
-			/*@editable*/border:0;
-			/*@editable*/padding-top:9px;
-			/*@editable*/padding-bottom:9px;
-		}
-	/*
-	@tab Footer
-	@section Utility Bar Text
-	*/
-		#utilityBar,#utilityBar p{
-			/*@editable*/color:#656565;
-			/*@editable*/font-family:Helvetica;
-			/*@editable*/font-size:12px;
-			/*@editable*/line-height:150%;
-			/*@editable*/text-align:center;
-		}
-	/*
-	@tab Footer
-	@section Utility Bar Link
-	*/
-		#utilityBar a,#utilityBar p a{
-			/*@editable*/color:#656565;
-			/*@editable*/font-weight:normal;
-			/*@editable*/text-decoration:underline;
-		}
-	@media only screen and (max-width: 480px){
-		body,table,td,p,a,li,blockquote{
-			-webkit-text-size-adjust:none !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-		body{
-			width:100% !important;
-			min-width:100% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-		.templateImage{
-			width:100% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-		.columnContainer{
-			max-width:100% !important;
-			width:100% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-		.mobileHide{
-			display:none;
-		}
-
-}	@media only screen and (max-width: 480px){
-		.utilityLink{
-			display:block;
-			padding:9px 0;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Heading 1
-	*/
-		h1{
-			/*@editable*/font-size:22px !important;
-			/*@editable*/line-height:175% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Heading 2
-	*/
-		h2{
-			/*@editable*/font-size:20px !important;
-			/*@editable*/line-height:175% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Heading 3
-	*/
-		h3{
-			/*@editable*/font-size:18px !important;
-			/*@editable*/line-height:175% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Heading 4
-	*/
-		h4{
-			/*@editable*/font-size:16px !important;
-			/*@editable*/line-height:175% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Preheader Visibility
-	*/
-		#templatePreheader{
-			/*@editable*/display:block !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Preheader Text
-	*/
-		#templatePreheader,#templatePreheader p{
-			/*@editable*/font-size:14px !important;
-			/*@editable*/line-height:150% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Header Text
-	*/
-		#templateHeader,#templateHeader p{
-			/*@editable*/font-size:16px !important;
-			/*@editable*/line-height:150% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Body Text
-	*/
-		#templateBody,#templateBody p{
-			/*@editable*/font-size:16px !important;
-			/*@editable*/line-height:150% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Footer Text
-	*/
-		#templateFooter,#templateFooter p{
-			/*@editable*/font-size:14px !important;
-			/*@editable*/line-height:150% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Social Bar Text
-	*/
-		#socialBar,#socialBar p{
-			/*@editable*/font-size:14px !important;
-			/*@editable*/line-height:150% !important;
-		}
-
-}	@media only screen and (max-width: 480px){
-	/*
-	@tab Mobile Styles
-	@section Utility Bar Text
-	*/
-		#utilityBar,#utilityBar p{
-			/*@editable*/font-size:14px !important;
-			/*@editable*/line-height:150% !important;
-		}
-
-}</style></head>
-
-<body>
-    <center>
-        <table align="center" border="0" cellpadding="0" cellspacing="0" height="100%" width="100%" id="bodyTable">
-            <tr>
-                <td align="center" valign="top" id="bodyCell">
-                    <!-- BEGIN TEMPLATE // -->
-                    <!--[if gte mso 9]>
-                    <table align="center" border="0" cellspacing="0" cellpadding="0" width="600" style="width:600px;">
-                    <tr>
-                    <td align="center" valign="top" width="600" style="width:600px;">
-                    <![endif]-->
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%" class="templateContainer">
-                        <!-- BEGIN PREHEADER // -->
-                        <tr>
-                            <td valign="top" id="templatePreheader">
-
-                                <!-- BEGIN MODULE: STANDARD PREHEADER // -->
-                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                    <tr>
-                                        <td valign="top">
-                                            <!--[if mso]>
-                                            <table align="left" border="0" cellspacing="0" cellpadding="0" width="100%" style="width:100%;">
-                                            <tr>
-                                            <td valign="top" width="384" style="width:384px;">
-                                            <![endif]-->
-                                            <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width:384px;" width="100%" class="columnContainer">
-                                                <tr>
-                                                    <td valign="top">
-                                                        <div mc:edit="preheader_leftcol_content">
-                                                            <p>Use this area to offer a short preview of your email's content.</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                            <!--[if mso]>
-                                            </td>
-                                            <td valign="top" width="180" style="width:180px;">
-                                            <![endif]-->
-                                            <table align="left" border="0" cellpadding="0" cellspacing="0" style="max-width:180px;" width="100%" class="columnContainer">
-                                                <tr>
-                                                    <td valign="top">
-                                                        <div mc:edit="preheader_rightcol_content">
-                                                            <p><a href="*|ARCHIVE|*" target="_blank">View email in your browser</a></p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            </table>
-                                            <!--[if mso]>
-                                            </td>
-                                            </tr>
-                                            </table>
-                                            <![endif]-->
-                                        </td>
-                                    </tr>
-                                </table>
-                                <!-- // END MODULE: STANDARD PREHEADER -->
-
-                            </td>
-                        </tr>
-                        <!-- // END PREHEADER -->
-                        <!-- BEGIN HEADER // -->
-                        <tr>
-                            <td valign="top" id="templateHeader">
-
-                                <!-- BEGIN MODULE: HEADER IMAGE // -->
-                                <img src="https://cdn-images.mailchimp.com/template_images/gallery/5ab9a40f-549b-4619-92c2-d7fd6e34e6b4.png" style="max-width:564px;" class="templateImage" mc:label="header_image" mc:edit="header_image" mc:allowdesigner mc:allowtext>
-                                <!-- // END MODULE: HEADER IMAGE -->
-
-                            </td>
-                        </tr>
-                        <!-- // END HEADER -->
-                        <!-- BEGIN BODY // -->
-                        <tr>
-                            <td valign="top" id="templateBody">
-
-                                <!-- BEGIN MODULE: BODY CONTENT // -->
-                                <div mc:edit="body_content">
-                                    <h1>Heading 1</h1>
-                                    <h2>Heading 2</h2>
-                                    <h3>Heading 3</h3>
-                                    <h4>Heading 4</h4>
-                                    <p><strong>Getting started!</strong><br>To choose your fonts, colors, and styles, click <strong>Edit Design</strong> at the bottom of this screen. After you create a look and feel you love, click inside this box to start adding your own content.</p>
-                                    <p>Any time you create a layout here, you'll be able to find it in the <strong>Saved Templates</strong> tab on the <strong>Templates</strong> step. Then, you can reuse it as-is or quickly create new, similar versions for different types of messages.</p>
-                                    <p>Our <a href="https://templates.mailchimp.com/">Email Design Reference</a> can help you add content blocks to this template or show you how to design and code your own from scratch.</p>
-                                </div>
-                                <!-- // END MODULE: BODY CONTENT -->
-
-                            </td>
-                        </tr>
-                        <!-- // END BODY -->
-                        <!-- BEGIN FOOTER // -->
-                        <tr>
-                            <td valign="top" id="templateFooter">
-
-                                <!-- BEGIN MODULE: STANDARD FOOTER // -->
-                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                    <tr>
-                                        <td valign="top" id="socialBar">
-                                            <div mc:edit="social_bar">
-                                                <a href="*|TWITTER:PROFILEURL|*" class="utilityLink">Follow on Twitter</a><span class="mobileHide"> &nbsp; | &nbsp; </span><a href="*|FACEBOOK:PROFILEURL|*" class="utilityLink">Friend on Facebook</a>
-                                                <span class="mobileHide"> &nbsp; | &nbsp; </span><a href="*|FORWARD|*" class="utilityLink">Forward to a Friend</a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td valign="top" id="footerContent">
-                                            <div mc:edit="footer_content">
-                                                *|IF:LIST|*
-                                                <em>Copyright &copy; *|CURRENT_YEAR|* *|LIST:COMPANY|*, All rights reserved.</em>
-                                                <br>
-                                                <!-- *|IFNOT:ARCHIVE_PAGE|* -->
-                                                *|LIST:DESCRIPTION|*
-                                                <br>
-                                                <strong>Our mailing address is:</strong>
-                                                <br> *|HTML:LIST_ADDRESS_HTML|*
-                                                <br>
-                                                <!-- *|END:IF|* -->
-                                                *|ELSE:|*
-                                                <!-- *|IFNOT:ARCHIVE_PAGE|* -->
-                                                <em>Copyright &copy; *|CURRENT_YEAR|* *|USER:COMPANY|*, All rights reserved.</em>
-                                                <br>
-                                                <strong>Our mailing address is:</strong>
-                                                <br> *|USER:ADDRESS_HTML|*
-                                                <!-- *|END:IF|* -->
-                                                *|END:IF|*
-                                            </div>
-                                            <div mc:edit="monkeyrewards">
-                                                *|IF:REWARDS|* *|HTML:REWARDS|* *|END:IF|*
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td valign="top" id="utilityBar">
-                                            <div mc:edit="utility_bar">
-                                                <a href="*|UNSUB|*" class="utilityLink">unsubscribe from this list</a><span class="mobileHide"> | </span><a href="*|UPDATE_PROFILE|*" class="utilityLink">update subscription preferences</a>
-                                                <!-- *|IFNOT:ARCHIVE_PAGE|* --><span class="mobileHide"> | </span><a href="*|ARCHIVE|*" class="utilityLink">view email in browser</a>
-                                                <!-- *|END:IF|* -->
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <!-- // BEGIN MODULE: STANDARD FOOTER -->
-
-                            </td>
-                        </tr>
-                        <!-- // END FOOTER -->
-                    </table>
-                    <!--[if gte mso 9]>
-                    </td>
-                    </tr>
-                    </table>
-                    <![endif]-->
-                    <!-- // END TEMPLATE -->
-                </td>
-            </tr>
-        </table>
-    </center>
-</body>
-
-</html>`;
-
-
-export function CreateCodeTemplate() {
+export function CreateCodeTemplate({ templateId }: CreateCodeTemplateProps) {
   const router = useRouter();
-  const { initialize, updateDraft, draft, language } = useEditorStore();
+  const { 
+    initialize, 
+    updateDraft, 
+    draft, 
+    language, 
+    setLanguage, 
+    template, 
+    originalVersion, 
+    isDirty,
+    isSaving,
+    setIsSaving,
+    saveSuccess
+  } = useEditorStore();
+  
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [name, setName] = useState('Untitled Template');
   const [slug, setSlug] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
+  
+  // Local state for "Save & Exit" in creation mode
+  const [defaultHtml, setDefaultHtml] = useState(DEFAULT_EMAIL_HTML);
 
   useEffect(() => {
-    // Initialize with a mock template and default HTML
-    initialize({
-      id: 'new',
-      name: 'Untitled Template',
-      slug: 'untitled-template',
-      channel: 'email',
-      category: 'marketing',
-      description: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    } as Template, null);
-    
-    updateDraft('body_html', DEFAULT_HTML);
-    updateDraft('subject', '*|MC:SUBJECT|*');
-  }, [initialize, updateDraft]);
+    // Only initialize mock if NO templateId is provided (Creation Mode)
+    // AND we haven't already initialized (check template.id to avoid overwrite loops if desirable, 
+    // but typically creation starts fresh).
+    if (!templateId && !template?.id) {
+        initialize({
+            id: 'new',
+            name: 'Untitled Template',
+            slug: 'untitled-template',
+            channel: 'email',
+            category: 'marketing',
+            description: '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        } as Template, null);
+        
+        updateDraft('body_html', defaultHtml);
+        updateDraft('subject', '*|MC:SUBJECT|*');
+    }
+  }, [initialize, updateDraft, defaultHtml, templateId, template?.id]);
 
-  const handleSaveAndExit = async () => {
-    if (!name || !slug) {
-        toast.error("Please provide a name and slug");
+  // Sync local name/slug with loaded template if in edit mode
+  useEffect(() => {
+      if (template && template.id !== 'new') {
+          setName(template.name);
+          setSlug(template.slug);
+      }
+  }, [template]);
+
+  const handleSave = async (exit: boolean = false) => {
+    if (!template) return;
+
+    // Validation for new templates
+    if (!templateId && (!name || !slug)) {
+        setShowSaveDialog(true);
+        return;
+    }
+
+    // Optimization: If exiting and no changes for existing template, just exit
+    if (templateId && !isDirty && exit) {
+        router.push('/campaigns/email');
         return;
     }
 
     setIsSaving(true);
     try {
-        // 1. Create Template
-        const template = await templateApi.createTemplate({
-            name,
-            slug,
-            channel: 'email', 
-            category: 'marketing'
-        });
+        let currentTemplateId = template.id;
 
-        // 2. Create Version with content
-        await templateApi.createVersion(template.id, {
+        // If creating new (via dialog flow mostly, but handle direct call safe-guard)
+        if (!templateId && template.id === 'new') {
+             // actually this flow is handled by handleCreateNew in dialog
+             setShowSaveDialog(true);
+             setIsSaving(false);
+             return;
+        }
+
+        // Updating existing
+        await templateApi.createVersion(currentTemplateId, {
             body_html: draft.body_html,
             body_text: draft.body_text || '',
             subject: draft.subject,
@@ -751,14 +116,49 @@ export function CreateCodeTemplate() {
             language: language
         });
 
-        toast.success("Template created successfully!");
-        router.push('/campaigns/email'); // Redirect to list or editor? User said "Save and Exit", typically implies list.
+        toast.success("Saved successfully");
+        if (exit) {
+            router.push('/campaigns/email');
+        }
     } catch (error: any) {
-        console.error("Failed to create template:", error);
+        console.error("Failed to save:", error);
         toast.error("Failed to save template");
     } finally {
         setIsSaving(false);
     }
+  };
+
+  const handleCreateNew = async () => {
+       if (!name || !slug) {
+          toast.error("Please enter a name and slug");
+          return;
+       }
+
+       setIsSaving(true);
+       try {
+           const newTemplate = await templateApi.createTemplate({
+               name,
+               slug,
+               channel: 'email',
+               category: 'marketing'
+           });
+
+           await templateApi.createVersion(newTemplate.id, {
+               body_html: draft.body_html,
+               body_text: draft.body_text || '',
+               subject: draft.subject,
+               variables_schema: draft.variables_schema || {},
+               language: language
+           });
+
+           toast.success("Template created successfully!");
+           router.push('/campaigns/email');
+       } catch (error: any) {
+           console.error("Failed to create:", error);
+           toast.error(error.message || "Failed to create template");
+       } finally {
+           setIsSaving(false);
+       }
   };
 
   return (
@@ -769,10 +169,41 @@ export function CreateCodeTemplate() {
              <Button variant="ghost" size="icon" onClick={() => router.back()}>
                  <ArrowLeft className="h-4 w-4" />
              </Button>
-             <h1 className="font-semibold text-lg">{name}</h1>
+             <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                    <h1 className="font-semibold text-lg">{template?.name || name}</h1>
+                    {templateId && <Badge variant="outline" className="text-xs py-0 h-5">v{originalVersion?.version || 1}</Badge>}
+                </div>
+                {templateId && (
+                     <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        {isDirty ? <span className="text-yellow-600 font-medium">Unsaved changes</span> : "Saved"}
+                     </span>
+                )}
+             </div>
         </div>
         <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground mr-2">Preview and Test</span>
+            {/* Language Selector */}
+            <div className="flex items-center gap-1 bg-muted/30 p-1 rounded mr-2">
+                <span className="text-xs text-muted-foreground px-1">Lang:</span>
+                <Input 
+                   className="h-6 w-16 text-xs bg-transparent border-none focus-visible:ring-0 px-0 shadow-none"
+                   value={language} 
+                   onChange={(e) => setLanguage(e.target.value)}
+                   placeholder="en-US"
+                />
+            </div>
+
+            <Button variant="outline" size="sm" className="h-8">
+                <Send className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Test</span>
+            </Button>
+            
+            {templateId && (
+                <Button size="sm" variant="secondary" className="h-8">
+                    <LayoutTemplate className="h-4 w-4 mr-2" />
+                    <span className="hidden sm:inline">Publish</span>
+                </Button>
+            )}
         </div>
       </header>
 
@@ -793,8 +224,26 @@ export function CreateCodeTemplate() {
             {/* Right: Code Editor */}
             <ResizablePanel defaultSize={50} minSize={30}>
                 <div className="h-full flex flex-col">
-                    <div className="h-14 bg-muted flex items-center px-4 text-base font-medium border-b">
-                        Edit code
+                    <div className="h-14 bg-muted flex items-center justify-between px-4 border-b">
+                        <span className="text-base font-medium">Edit code</span>
+                        
+                        {/* Variables Sheet Trigger */}
+                        <Sheet>
+                           <SheetTrigger asChild>
+                             <Button variant="ghost" size="sm" className="h-8 px-2">
+                               <Settings2 className="h-4 w-4 mr-2" />
+                               Variables
+                             </Button>
+                           </SheetTrigger>
+                           <SheetContent className="w-[400px]">
+                             <SheetHeader>
+                               <SheetTitle>Template Variables</SheetTitle>
+                             </SheetHeader>
+                             <div className="mt-4 h-full overflow-auto pb-8">
+                               <VariablePanel />
+                             </div>
+                           </SheetContent>
+                        </Sheet>
                     </div>
                     <div className="flex-1 overflow-hidden">
                         <CodeEditor />
@@ -812,15 +261,14 @@ export function CreateCodeTemplate() {
            <Button variant="ghost" size="sm" className="h-auto p-0 font-medium text-foreground hover:bg-transparent">Edit Code</Button>
         </div>
         <Button 
-            size="sm" 
-            onClick={() => setShowSaveDialog(true)}
+            onClick={() => handleSave(true)}
         >
             <span className="hidden sm:inline mr-2">Save and Exit</span>
-            <ArrowLeft className="h-4 w-4 rotate-180" />
+            <ArrowRight className="h-4 w-4" />
         </Button>
       </footer>
 
-      {/* Save Dialog */}
+      {/* Create New Dialog (only for new templates) */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -854,7 +302,7 @@ export function CreateCodeTemplate() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowSaveDialog(false)} disabled={isSaving}>Cancel</Button>
-            <Button onClick={handleSaveAndExit} disabled={isSaving}>
+            <Button onClick={handleCreateNew} disabled={isSaving}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save & Exit
             </Button>
